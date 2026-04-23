@@ -132,7 +132,7 @@
 
                 <!-- Memoria Pfizer -->
                 <div class="bg-slate-900 rounded-xl p-6 shadow-inner mt-8 mb-8">
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-blue-400"></i> Cálculos</h4>
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-blue-400"></i> Memoria de Cálculo (DCF)</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">Costo Capital (Ke)</div><div class="mb-1 text-slate-300">4.30% + 0.55 × (5.00%)</div><div class="text-blue-400 font-bold text-lg">= 7.05%</div></div>
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">WACC</div><div class="mb-1 text-slate-300">(41.7%×7.05%) + (58.3%×4.35%×0.85)</div><div class="text-emerald-400 font-bold text-lg">= 5.76%</div></div>
@@ -271,7 +271,7 @@
 
                 <!-- Memoria FUNO -->
                 <div class="bg-slate-900 rounded-xl p-6 shadow-inner mt-8 mb-8">
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-emerald-400"></i> Cálculo</h4>
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-emerald-400"></i> Memoria de Cálculo (FIBRA)</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">Costo Capital (Ke)</div><div class="mb-1 text-slate-300">9.20% + 0.75 × (6.00%)</div><div class="text-blue-400 font-bold text-lg">= 13.70%</div></div>
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">WACC (Tasa 0% FIBRA)</div><div class="mb-1 text-slate-300">(38.4%×13.7%) + (61.6%×8.5%×1)</div><div class="text-emerald-400 font-bold text-lg">= 10.49%</div></div>
@@ -328,20 +328,21 @@
         const formatCur = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
         const formatCurMX = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v);
         
-        // FUNCIÓN PRINCIPAL DE FORMATO PARA GRÁFICAS
+        // FUNCIÓN PRINCIPAL DE FORMATO PARA GRÁFICAS CORREGIDA
         const formatMetric = (val, unit) => {
             if (val === null || val === undefined) return '';
-            let numStr = Number(val).toLocaleString('en', {maximumFractionDigits: 2});
+            let numStr = Number(val).toLocaleString('en-US', {maximumFractionDigits: 2});
+            
+            // Lógica exacta: si es '$' va antes, si es '$B' va antes y después, si es 'x' va pegado al final
             if (unit === '$') return `$${numStr}`;
             if (unit === '$B') return `$${numStr} B`;
             if (unit === 'x') return `${numStr}x`;
+            
             return `${numStr} ${unit}`;
         };
 
         let pfeChartInstance = null;
         let funoChartInstance = null;
-        let pfeCurrentKey = 'PER';
-        let funoCurrentKey = 'PER';
 
         // ==========================================
         // DATOS PFIZER
@@ -429,8 +430,8 @@
             document.getElementById('funo-buttons').innerHTML = Object.keys(funoMultConfig).map(k => createBtn('btn-funo', k, funoMultConfig[k], 'updateFuno')).join('');
 
             // 3. Gráficas Principales (Line)
-            pfeChartInstance = new Chart(document.getElementById('pfe-chart-multiples').getContext('2d'), getLineConfig(pfeMultData, pfeMultConfig, pfeCurrentKey));
-            funoChartInstance = new Chart(document.getElementById('funo-chart-multiples').getContext('2d'), getLineConfig(funoMultData, funoMultConfig, funoCurrentKey));
+            pfeChartInstance = new Chart(document.getElementById('pfe-chart-multiples').getContext('2d'), getLineConfig(pfeMultData, pfeMultConfig, 'PER'));
+            funoChartInstance = new Chart(document.getElementById('funo-chart-multiples').getContext('2d'), getLineConfig(funoMultData, funoMultConfig, 'PER'));
 
             // 4. Gráficas Avanzadas Pfizer
             new Chart(document.getElementById('pfe-chart-fcff').getContext('2d'), { type: 'bar', data: { labels: ['2026', '2027', '2028', '2029', '2030'], datasets: [{ data: [10300, 10609, 10927, 11255, 11593], backgroundColor: '#10b981', borderRadius: 4}] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { ticks: { callback: v => `$${v}` } }, x: { grid: { display: false } } } } });
@@ -467,6 +468,7 @@
                         tooltip: { 
                             callbacks: { 
                                 label: c => {
+                                    // Esta función se reescribirá en updateUI para tener siempre la unidad actual
                                     return `${c.dataset.label}: ${formatMetric(c.raw, configDict[key].u)}`;
                                 } 
                             } 
@@ -476,7 +478,10 @@
                         x: { grid: { display: false } }, 
                         y: { 
                             ticks: { 
-                                callback: v => formatMetric(v, configDict[key].u)
+                                callback: v => {
+                                    // Esta función se reescribirá en updateUI para tener siempre la unidad actual
+                                    return formatMetric(v, configDict[key].u);
+                                }
                             } 
                         } 
                     }
@@ -486,34 +491,55 @@
 
         function updateUI(prefix, key, configDict, chartInst, dataSets, activeBgColor) {
             const conf = configDict[key];
+            
+            // Actualizar botones
             Object.keys(configDict).forEach(k => {
                 const b = document.getElementById(`btn-${prefix}-${k}`);
-                if(k===key) { b.className=`flex items-center gap-3 p-4 rounded-xl transition-all border shadow-md w-full text-left ${activeBgColor} text-white`; b.querySelector('.icon-container').className='icon-container text-white opacity-80'; }
-                else { b.className=`flex items-center gap-3 p-4 rounded-xl transition-all border bg-white text-slate-700 hover:bg-slate-50 w-full text-left`; b.querySelector('.icon-container').className='icon-container text-slate-400'; }
+                if(k===key) { 
+                    b.className=`flex items-center gap-3 p-4 rounded-xl transition-all border shadow-md w-full text-left ${activeBgColor} text-white`; 
+                    b.querySelector('.icon-container').className='icon-container text-white opacity-80'; 
+                }
+                else { 
+                    b.className=`flex items-center gap-3 p-4 rounded-xl transition-all border bg-white text-slate-700 hover:bg-slate-50 w-full text-left`; 
+                    b.querySelector('.icon-container').className='icon-container text-slate-400'; 
+                }
             });
+
+            // Actualizar textos e íconos
             document.getElementById(`${prefix}-title-dot`).style.color = conf.c;
             document.getElementById(`${prefix}-title-text`).textContent = conf.n;
             document.getElementById(`${prefix}-interp-text`).textContent = conf.t;
             document.getElementById(`${prefix}-icon-wrapper`).innerHTML = `<i data-feather="${conf.i}" class="w-6 h-6" style="color:${conf.c}"></i>`;
             
+            // ACTUALIZACIÓN DINÁMICA DEL FORMATO (SOLUCIÓN DEL BUG)
+            chartInst.options.plugins.tooltip.callbacks.label = function(c) {
+                return `${c.dataset.label}: ${formatMetric(c.raw, conf.u)}`;
+            };
+            chartInst.options.scales.y.ticks.callback = function(v) {
+                return formatMetric(v, conf.u);
+            };
+
+            // Actualizar datos de la gráfica
             chartInst.data.datasets[0].label = conf.n;
             chartInst.data.datasets[0].data = dataSets[key];
             chartInst.data.datasets[0].borderColor = conf.c;
             
             if(conf.a) {
-                chartInst.data.datasets[1].data = Array(4).fill(conf.a); chartInst.data.datasets[1].hidden = false;
+                chartInst.data.datasets[1].data = Array(4).fill(conf.a); 
+                chartInst.data.datasets[1].hidden = false;
                 document.getElementById(`${prefix}-sector-legend`).classList.remove('hidden');
                 document.getElementById(`${prefix}-sector-avg`).textContent = formatMetric(conf.a, conf.u);
             } else {
                 chartInst.data.datasets[1].hidden = true;
                 document.getElementById(`${prefix}-sector-legend`).classList.add('hidden');
             }
+            
             chartInst.update();
             feather.replace();
         }
 
-        function updatePfe(key) { pfeCurrentKey=key; updateUI('pfe', key, pfeMultConfig, pfeChartInstance, pfeMultData.datasets, 'bg-blue-900 border-blue-900'); }
-        function updateFuno(key) { funoCurrentKey=key; updateUI('funo', key, funoMultConfig, funoChartInstance, funoMultData.datasets, 'bg-emerald-900 border-emerald-900'); }
+        function updatePfe(key) { updateUI('pfe', key, pfeMultConfig, pfeChartInstance, pfeMultData.datasets, 'bg-blue-900 border-blue-900'); }
+        function updateFuno(key) { updateUI('funo', key, funoMultConfig, funoChartInstance, funoMultData.datasets, 'bg-emerald-900 border-emerald-900'); }
 
         function switchTab(tab) {
             const vPfe = document.getElementById('view-pfizer'), vFuno = document.getElementById('view-funo');
