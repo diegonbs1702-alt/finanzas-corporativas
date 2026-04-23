@@ -132,7 +132,7 @@
 
                 <!-- Memoria Pfizer -->
                 <div class="bg-slate-900 rounded-xl p-6 shadow-inner mt-8 mb-8">
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-blue-400"></i> Memoria de Cálculo (DCF)</h4>
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-blue-400"></i> Cálculos</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">Costo Capital (Ke)</div><div class="mb-1 text-slate-300">4.30% + 0.55 × (5.00%)</div><div class="text-blue-400 font-bold text-lg">= 7.05%</div></div>
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">WACC</div><div class="mb-1 text-slate-300">(41.7%×7.05%) + (58.3%×4.35%×0.85)</div><div class="text-emerald-400 font-bold text-lg">= 5.76%</div></div>
@@ -271,7 +271,7 @@
 
                 <!-- Memoria FUNO -->
                 <div class="bg-slate-900 rounded-xl p-6 shadow-inner mt-8 mb-8">
-                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-emerald-400"></i> Memoria de Cálculo (FIBRA)</h4>
+                    <h4 class="text-lg font-bold text-white mb-4 flex items-center gap-2"><i data-feather="terminal" class="w-5 h-5 text-emerald-400"></i> Cálculo</h4>
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">Costo Capital (Ke)</div><div class="mb-1 text-slate-300">9.20% + 0.75 × (6.00%)</div><div class="text-blue-400 font-bold text-lg">= 13.70%</div></div>
                         <div class="bg-slate-800 border border-slate-700 p-4 rounded-lg font-mono text-sm"><div class="text-slate-400 text-xs mb-2 uppercase font-bold">WACC (Tasa 0% FIBRA)</div><div class="mb-1 text-slate-300">(38.4%×13.7%) + (61.6%×8.5%×1)</div><div class="text-emerald-400 font-bold text-lg">= 10.49%</div></div>
@@ -328,6 +328,16 @@
         const formatCur = (v) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(v);
         const formatCurMX = (v) => new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 0 }).format(v);
         
+        // FUNCIÓN PRINCIPAL DE FORMATO PARA GRÁFICAS
+        const formatMetric = (val, unit) => {
+            if (val === null || val === undefined) return '';
+            let numStr = Number(val).toLocaleString('en', {maximumFractionDigits: 2});
+            if (unit === '$') return `$${numStr}`;
+            if (unit === '$B') return `$${numStr} B`;
+            if (unit === 'x') return `${numStr}x`;
+            return `${numStr} ${unit}`;
+        };
+
         let pfeChartInstance = null;
         let funoChartInstance = null;
         let pfeCurrentKey = 'PER';
@@ -394,12 +404,12 @@
         };
 
         const funoMultConfig = {
-            PER: { n: 'PER (Price-to-Earnings)', c: '#059669', u: 'x', i: 'activity', a: 12.5, t: 'El PER (Price-to-Earnings Ratio) indica cuánto paga el mercado bursátil por cada peso de ganancia neta generada por el fideicomiso. La reciente alza a 22.57x en 2025, hace sentido debido a las utilidades record en 2025.' },
+            PER: { n: 'PER (Price-to-Earnings)', c: '#059669', u: 'x', i: 'activity', a: 12.5, t: 'El PER (Price-to-Earnings Ratio) indica cuánto paga el mercado bursátil por cada peso de ganancia neta generada por el fideicomiso. La reciente corrección bajista a 10.97x en 2025, coexistiendo con utilidades récord, evidencia que el mercado está castigando severamente la cotización del título.' },
             VEEBITDA: { n: 'VE / EBITDA (NOI)', c: '#10b981', u: 'x', i: 'bar-chart-2', a: 11.5, t: 'Para las FIBRAs, el múltiplo VE/EBITDA es fundamental porque refleja la valoración del Ingreso Operativo Neto (NOI) aislando el efecto de la deuda. La estabilización en torno a las 11x demuestra que los activos inmobiliarios subyacentes conservan una capacidad robusta y consistente para generar rentas.' },
             VEEBIT: { n: 'VE / EBIT', c: '#8b5cf6', u: 'x', i: 'trending-up', a: 14.0, t: 'Este múltiplo compara el Valor de la Empresa total frente a la utilidad operativa después de la depreciación de las propiedades. La caída favorable hacia 11.95x en 2025, impulsada por un EBIT superior a los $20 mil millones, abarata la valoración operativa y refuerza la subvaluación.' },
             VEVentas: { n: 'VE / Ventas', c: '#f59e0b', u: 'x', i: 'dollar-sign', a: 7.5, t: 'El VE/Ventas mide cuántos pesos vale la entidad por cada peso de ingresos brutos por arrendamiento que logra facturar. La contracción de la métrica a 8.36x, a pesar del crecimiento ininterrumpido en los ingresos totales, subraya que el precio de mercado no sigue el ritmo expansivo de las rentas.' },
             UPA: { n: 'UPA', c: '#f43f5e', u: '$', i: 'briefcase', t: 'La Utilidad por Acción (UPA) señala el beneficio contable neto que teóricamente corresponde a cada certificado bursátil en circulación. El rebote agresivo en forma de "V" hasta $6.42 MXN en 2025 es un fuerte catalizador para incrementar el pago de distribuciones obligatorias a los inversionistas.' },
-            FCF: { n: 'Flujo neto de caja por Acción', c: '#14b8a6', u: '$', i: 'activity', t: 'El Flujo neto de caja por acción mide la verdadera caja generada por el negocio inmobiliario disponible para pagar dividendos. Su trayectoria en un canal horizontal muy estable alrededor de $4.50 a $5.20 MXN confirma la predictibilidad y seguridad del modelo de negocio de rentas.' },
+            FCF: { n: 'Flujo FFO', c: '#14b8a6', u: '$', i: 'activity', t: 'El Flujo FFO (Funds From Operations) por acción mide la verdadera caja generada por el negocio inmobiliario disponible para pagar dividendos. Su trayectoria en un canal horizontal muy estable alrededor de $4.50 a $5.20 MXN confirma la predictibilidad y seguridad del modelo de negocio de rentas.' },
             MarketCap: { n: 'Market Cap', c: '#3b82f6', u: '$B', i: 'globe', t: 'La Capitalización Bursátil es el valor total que los inversionistas le asignan al fideicomiso en el mercado de valores público. El rebote a $103B MXN en 2025 refleja una leve recuperación del sentimiento del mercado, aunque sigue muy rezagado respecto al valor real de sus inmuebles.' },
             EnterpriseValue: { n: 'Enterprise Value', c: '#6366f1', u: '$B', i: 'layers', t: 'El Enterprise Value consolida la capitalización bursátil con el nivel de deuda, mostrando el valor real que costaría adquirir todos los activos de la FIBRA. Su estabilización en ~$250B MXN demuestra que, a pesar del alto apalancamiento característico del sector, el fideicomiso mantiene una escala masiva y constante.' },
             BookValue: { n: 'NAV (Valor Libros)', c: '#475569', u: '$', i: 'book', t: 'El Valor en Libros (NAV o Net Asset Value) ilustra el valor patrimonial real de los bienes raíces y activos tangibles que respaldan cada acción. La curva casi plana y sólida por encima de $43 MXN expone gráficamente el inmenso descuento de mercado frente al precio actual cotizado (~$27 MXN).' }
@@ -451,8 +461,25 @@
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => { let u=configDict[key].u, v=Number(c.raw).toLocaleString('en',{maximumFractionDigits:2}); return u==='$'?`$${v}`:u==='$B'?`$${v} B`:`${v}${u}`; } } } },
-                    scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => { let u=configDict[key].u, nv=Number(v).toLocaleString('en',{maximumFractionDigits:2}); return u==='$'?`$${nv}`:u==='$B'?`$${nv} B`:`${nv}${u}`; } } } }
+                    responsive: true, maintainAspectRatio: false, 
+                    plugins: { 
+                        legend: { display: false }, 
+                        tooltip: { 
+                            callbacks: { 
+                                label: c => {
+                                    return `${c.dataset.label}: ${formatMetric(c.raw, configDict[key].u)}`;
+                                } 
+                            } 
+                        } 
+                    },
+                    scales: { 
+                        x: { grid: { display: false } }, 
+                        y: { 
+                            ticks: { 
+                                callback: v => formatMetric(v, configDict[key].u)
+                            } 
+                        } 
+                    }
                 }
             };
         }
@@ -472,10 +499,11 @@
             chartInst.data.datasets[0].label = conf.n;
             chartInst.data.datasets[0].data = dataSets[key];
             chartInst.data.datasets[0].borderColor = conf.c;
+            
             if(conf.a) {
                 chartInst.data.datasets[1].data = Array(4).fill(conf.a); chartInst.data.datasets[1].hidden = false;
                 document.getElementById(`${prefix}-sector-legend`).classList.remove('hidden');
-                document.getElementById(`${prefix}-sector-avg`).textContent = conf.u==='$'?`$${conf.a}`:`${conf.a}${conf.u}`;
+                document.getElementById(`${prefix}-sector-avg`).textContent = formatMetric(conf.a, conf.u);
             } else {
                 chartInst.data.datasets[1].hidden = true;
                 document.getElementById(`${prefix}-sector-legend`).classList.add('hidden');
